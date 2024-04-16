@@ -1,6 +1,7 @@
 package com.sikku.taskservice.services.impl;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class TaskServiceImp implements ITaskService {
 
 	@Override
 	public Task createTask(Task task, String requesterRole) throws Exception {
-		if (requesterRole.equals("USER")) {
+		if (requesterRole.equals("ADMIN")) {
 			task.setStatus(TaskStatus.PENDING);
 			task.setCreatedAt(LocalDateTime.now());
 			return taskRepository.save(task);
@@ -35,16 +36,23 @@ public class TaskServiceImp implements ITaskService {
 	@Override
 	public List<Task> getAllTasks(TaskStatus status) {
 		List<Task> allTask = taskRepository.findAll();
-		if(status == null) {
-			return allTask;			
+		if (status == null) {
+			return allTask;
 		}
-		return allTask.stream().filter(task -> task.getStatus().name().equalsIgnoreCase(status.toString())).toList();
+		List<Task> list = allTask.stream().filter(task -> task.getStatus().name().equalsIgnoreCase(status.toString()))
+				.toList();
+		return list;
 	}
 
 	@Override
-	public List<Task> assignedUserTasks(Long userId, TaskStatus status)throws Exception {
+	public List<Task> assignedUserTasks(Long userId, TaskStatus status) throws Exception {
 		List<Task> list = taskRepository.findByAssignedUserId(userId);
-		if (status != null) {
+		List<TaskStatus> list1 = Arrays.asList(TaskStatus.values());
+		if (status == null) {
+			return list;
+		}
+
+		if (status != null && list1.contains(status)) {
 			return list.stream().filter(task -> task.getStatus().name().equalsIgnoreCase(status.toString())).toList();
 		}
 		throw new Exception("Invalid status");
@@ -53,14 +61,22 @@ public class TaskServiceImp implements ITaskService {
 	@Override
 	public Task updateTask(Long id, Task task, Long UserId) throws Exception {
 		Task taskById = getTaskById(id);
-		if (taskById.getAssignedUserId().equals(UserId)) {
+//		if (taskById.getAssignedUserId().equals(UserId)) {
+		if (task.getTitle() != null) {
 			taskById.setTitle(task.getTitle());
-			taskById.setDescription(task.getDescription());
-			taskById.setDeadline(task.getDeadline());
-			taskById.setTags(task.getTags());
-			return taskRepository.save(taskById);
 		}
-		throw new Exception("You are not authorized to update this task");
+		if (task.getDescription() != null) {
+			taskById.setDescription(task.getDescription());
+		}
+		if (task.getDeadline() != null) {
+			taskById.setDeadline(task.getDeadline());
+		}
+		if (task.getTags().size()!=0) {
+			taskById.setTags(task.getTags());
+		}
+		return taskRepository.save(taskById);
+//		}
+//		throw new Exception("You are not authorized to update this task");
 	}
 
 	@Override
@@ -86,7 +102,7 @@ public class TaskServiceImp implements ITaskService {
 	}
 
 	@Override
-	public List<Task> getAllTasks() {		
+	public List<Task> getAllTasks() {
 		return taskRepository.findAll();
 	}
 

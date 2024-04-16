@@ -55,8 +55,8 @@ public class TaskController {
 
 	@GetMapping("/all")
 	public ResponseEntity<List<Task>> getAllTasks(@RequestParam(required = false) TaskStatus status,
-			@RequestHeader("Authorization") String jwtToken) throws Exception {
-		return ResponseEntity.ok(taskService.getAllTasks());
+			@RequestHeader("Authorization") String jwtToken) throws Exception {		
+		return ResponseEntity.ok(taskService.getAllTasks(status));
 	}
 
 	@PostMapping("/{taskId}/user/{userId}")
@@ -74,7 +74,7 @@ public class TaskController {
 		String role = userProfile.getBody().getRole().name();
 		if (role.equalsIgnoreCase("ADMIN")) {
 			return ResponseEntity.ok(taskService.updateTask(taskId, task, userProfile.getBody().getId()));
-		}
+		}		
 		throw new RuntimeException("Only Admin can update task");
 	}
 
@@ -88,7 +88,7 @@ public class TaskController {
 	public String deleteTask(@PathVariable Long taskId, @RequestHeader("Authorization") String jwtToken)
 			throws Exception {
 		taskService.deleteTask(taskId);
-		return "Task deleted successfully having id: " + taskId;
+		return "{\"id\":5}";
 	}
 
 }
